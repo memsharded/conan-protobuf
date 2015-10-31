@@ -8,13 +8,14 @@ class ProtobufTestConan(ConanFile):
     generators = "cmake"
 
     def build(self):
-        self.run('protoc message.proto --cpp_out="."')
+        self.run('.%sprotoc message.proto --cpp_out="."' % os.sep)
         cmake = CMake(self.settings)
         self.run('cmake . %s' % cmake.command_line)
         self.run("cmake --build . %s" % cmake.build_config)
 
     def imports(self):
-        self.copy("protoc.exe", "", "bin")
+        self.copy("protoc.exe", "", "bin") # Windows
+        self.copy("protoc", "", "bin") # Linux / Macos
 
     def test(self):
         self.run(os.sep.join([".", "bin", "client"]))
