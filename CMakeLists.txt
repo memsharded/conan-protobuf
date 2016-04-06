@@ -53,6 +53,15 @@ if (MSVC)
   configure_file(extract_includes.bat.in extract_includes.bat)
 endif (MSVC)
 
+if (MSVC)
+  if (CONAN_COMPILER_VERSION STREQUAL "14")
+    # error C2338: <hash_map> is deprecated and will be REMOVED. Please use <unordere
+    # d_map>. You can define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS to acknowledge
+    # that you have received this warning.
+    add_definitions(-D_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS)
+  endif ()
+endif (MSVC)
+
 get_filename_component(protobuf_source_dir ${protobuf_SOURCE_DIR} PATH)
 
 include_directories(
