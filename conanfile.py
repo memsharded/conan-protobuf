@@ -13,6 +13,11 @@ class ProtobufConan(ConanFile):
     exports = "CMakeLists.txt", "*.cmake", "extract_includes.bat.in"
     options = {"static": [True, False]}
     default_options = "static=False"
+    requires = "zlib/1.2.8@lasote/stable"
+    generators = "cmake"
+
+    def config(self):
+        self.options["zlib"].shared = not self.options.static
 
     def source(self):
         tools.download("https://github.com/google/protobuf/"
