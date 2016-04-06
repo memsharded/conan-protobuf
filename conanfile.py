@@ -31,9 +31,11 @@ class ProtobufConan(ConanFile):
 
     def build(self):
         if self.settings.os == "Windows":
+            args = ['-DBUILD_TESTING=OFF']
+            args += ['-DBUILD_SHARED_LIBS=%s' % ('OFF' if self.options.static else 'ON')]
+
             cmake = CMake(self.settings)
-            self.run('cd protobuf-2.6.1/cmake && cmake . %s -DBUILD_TESTING=OFF'
-                     % cmake.command_line)
+            self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
         else:
             self.run("chmod +x protobuf-2.6.1/autogen.sh")
@@ -50,7 +52,10 @@ class ProtobufConan(ConanFile):
 
         if self.settings.os == "Windows":
             self.copy("*.lib", "lib", "protobuf-2.6.1/cmake", keep_path=False)
-            self.copy("*/protoc.exe", "bin", "protobuf-2.6.1/cmake", keep_path=False)
+            self.copy("protoc.exe", "bin", "protobuf-2.6.1/cmake/bin", keep_path=False)
+
+            if not self.options.static:
+                self.copy("*.dll", "bin", "protobuf-2.6.1/cmake/bin", keep_path=False)
         else:
             # Copy the libs to lib
             if self.options.static:
