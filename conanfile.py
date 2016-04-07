@@ -45,6 +45,13 @@ class ProtobufConan(ConanFile):
         else:
             env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
 
+            concurrency = 1
+            try:
+                import multiprocessing
+                concurrency = multiprocessing.cpu_count()
+            except (ImportError, NotImplementedError):
+                pass
+
             self.run("chmod +x protobuf-2.6.1/autogen.sh")
             self.run("chmod +x protobuf-2.6.1/configure")
             self.run("cd protobuf-2.6.1 && ./autogen.sh")
@@ -54,7 +61,7 @@ class ProtobufConan(ConanFile):
                 args += ['--disable-shared']
 
             self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
-            self.run("cd protobuf-2.6.1 && make")
+            self.run("cd protobuf-2.6.1 && make -j %s" % concurrency)
 
     def package(self):
         self.copy_headers("*.h", "protobuf-2.6.1/src")
