@@ -8,14 +8,17 @@ class ProtobufTestConan(ConanFile):
     generators = "cmake"
 
     def build(self):
-        self.run('.%sprotoc message.proto --cpp_out="."' % os.sep)
+        self.run('%s message.proto --cpp_out="."' % os.path.join('.', 'bin', 'protoc'))
         cmake = CMake(self.settings)
         self.run('cmake . %s' % cmake.command_line)
         self.run("cmake --build . %s" % cmake.build_config)
+        if self.settings.os == "Macos":
+            self.run("cd bin; for LINK_DESTINATION in $(otool -L client | grep libproto | cut -f 1 -d' '); do install_name_tool -change \"$LINK_DESTINATION\" \"@executable_path/$(basename $LINK_DESTINATION)\" client; done")
 
     def imports(self):
-        self.copy("protoc.exe", "", "bin") # Windows
-        self.copy("protoc", "", "bin") # Linux / Macos
+        self.copy("protoc.exe", "bin", "bin") # Windows
+        self.copy("protoc", "bin", "bin") # Linux / Macos
+        self.copy("libproto*.9.dylib", "bin", "bin") # Macos (when options.static=False)
 
     def test(self):
-        self.run(os.sep.join([".", "bin", "client"]))
+        self.run(os.path.join(".", "bin", "client"))

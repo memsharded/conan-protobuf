@@ -10,7 +10,7 @@ class ProtobufConan(ConanFile):
     version = "2.6.1"
     url = "https://github.com/memsharded/conan-protobuf.git"
     settings = "os", "compiler", "build_type", "arch"
-    exports = "CMakeLists.txt", "*.cmake", "extract_includes.bat.in"
+    exports = "CMakeLists.txt", "*.cmake", "extract_includes.bat.in", "change_dylib_names.sh"
     options = {"static": [True, False]}
     default_options = "static=False"
     requires = "zlib/1.2.8@lasote/stable"
@@ -33,6 +33,7 @@ class ProtobufConan(ConanFile):
         shutil.move("protoc.cmake", "protobuf-2.6.1/cmake")
         shutil.move("tests.cmake", "protobuf-2.6.1/cmake")
         shutil.move("extract_includes.bat.in", "protobuf-2.6.1/cmake")
+        shutil.move("change_dylib_names.sh", "protobuf-2.6.1/cmake")
 
     def build(self):
         if self.settings.os == "Windows":
@@ -78,11 +79,28 @@ class ProtobufConan(ConanFile):
                 self.copy("*.a", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
             else:
                 self.copy("*.so*", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
+                self.copy("*.9.dylib", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
+
             # Copy the exe to bin
-            self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
+            if self.settings.os == "Macos":
+                if self.options.static:
+                    self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
+                else:
+                    # "protoc" has libproto*.dylib dependencies with absolute file paths.
+                    # Change them to be relative.
+                    self.run("cd protobuf-2.6.1/src/.libs && bash ../../cmake/change_dylib_names.sh")
+
+                    # "src/protoc" may be a wrapper shell script which execute "src/.libs/protoc".
+                    # Copy "src/.libs/protoc" instead of "src/protoc"
+                    self.copy("protoc", "bin", "protobuf-2.6.1/src/.libs/", keep_path=False)
+                    self.copy("*.9.dylib", "bin", "protobuf-2.6.1/src/.libs", keep_path=False)
+            else:
+                self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
 
     def package_info(self):
         if self.settings.os == "Windows":
             self.cpp_info.libs = ["libprotobuf"]
+        elif self.settings.os == "Macos":
+            self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.9.dylib"]
         else:
             self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.so.9"]
