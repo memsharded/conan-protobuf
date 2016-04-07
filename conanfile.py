@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, CMake, tools, ConfigureEnvironment
 import os
 import shutil
 
@@ -43,13 +43,17 @@ class ProtobufConan(ConanFile):
             self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
         else:
+            env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
+
             self.run("chmod +x protobuf-2.6.1/autogen.sh")
             self.run("chmod +x protobuf-2.6.1/configure")
             self.run("cd protobuf-2.6.1 && ./autogen.sh")
+
+            args = []
             if self.options.static:
-                self.run("cd protobuf-2.6.1 && ./configure --disable-shared")
-            else:
-                self.run("cd protobuf-2.6.1 && ./configure")
+                args += ['--disable-shared']
+
+            self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1 && make")
 
     def package(self):
