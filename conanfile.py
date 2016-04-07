@@ -100,6 +100,8 @@ class ProtobufConan(ConanFile):
     def package_info(self):
         if self.settings.os == "Windows":
             self.cpp_info.libs = ["libprotobuf"]
+            if not self.options.static:
+                self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
         elif self.settings.os == "Macos":
             self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.9.dylib"]
         else:

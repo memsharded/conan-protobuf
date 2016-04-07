@@ -18,7 +18,9 @@ class ProtobufTestConan(ConanFile):
     def imports(self):
         self.copy("protoc.exe", "bin", "bin") # Windows
         self.copy("protoc", "bin", "bin") # Linux / Macos
-        self.copy("libproto*.9.dylib", "bin", "bin") # Macos (when options.static=False)
+        self.copy("libproto*.9.dylib", "bin", "bin") # Macos (when Protobuf:static=False)
+        self.copy("libproto*.dll", "bin", "bin") # Windows (when Protobuf:static=False)
+        self.copy("zlib*.dll", "bin", "bin") # Windows (when zlib:shared=True)
 
     def test(self):
         self.run(os.path.join(".", "bin", "client"))
