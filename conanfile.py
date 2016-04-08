@@ -15,6 +15,7 @@ class ProtobufConan(ConanFile):
     default_options = "static=False"
     requires = "zlib/1.2.8@lasote/stable"
     generators = "cmake"
+    license = "https://github.com/google/protobuf/blob/v2.6.1/LICENSE"
 
     def config(self):
         self.options["zlib"].shared = not self.options.static
