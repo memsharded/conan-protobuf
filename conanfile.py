@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, CMake, tools, ConfigureEnvironment
 import os
 import shutil
 
@@ -10,9 +10,15 @@ class ProtobufConan(ConanFile):
     version = "2.6.1"
     url = "https://github.com/memsharded/conan-protobuf.git"
     settings = "os", "compiler", "build_type", "arch"
-    exports = "CMakeLists.txt", "*.cmake", "extract_includes.bat.in"
+    exports = "CMakeLists.txt", "*.cmake", "extract_includes.bat.in", "change_dylib_names.sh"
     options = {"static": [True, False]}
     default_options = "static=False"
+    requires = "zlib/1.2.8@lasote/stable"
+    generators = "cmake"
+    license = "https://github.com/google/protobuf/blob/v2.6.1/LICENSE"
+
+    def config(self):
+        self.options["zlib"].shared = not self.options.static
 
     def source(self):
         tools.download("https://github.com/google/protobuf/"
@@ -28,40 +34,76 @@ class ProtobufConan(ConanFile):
         shutil.move("protoc.cmake", "protobuf-2.6.1/cmake")
         shutil.move("tests.cmake", "protobuf-2.6.1/cmake")
         shutil.move("extract_includes.bat.in", "protobuf-2.6.1/cmake")
+        shutil.move("change_dylib_names.sh", "protobuf-2.6.1/cmake")
 
     def build(self):
         if self.settings.os == "Windows":
+            args = ['-DBUILD_TESTING=OFF']
+            args += ['-DBUILD_SHARED_LIBS=%s' % ('OFF' if self.options.static else 'ON')]
+
             cmake = CMake(self.settings)
-            self.run('cd protobuf-2.6.1/cmake && cmake . %s -DBUILD_TESTING=OFF'
-                     % cmake.command_line)
+            self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
         else:
+            env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
+
+            concurrency = 1
+            try:
+                import multiprocessing
+                concurrency = multiprocessing.cpu_count()
+            except (ImportError, NotImplementedError):
+                pass
+
             self.run("chmod +x protobuf-2.6.1/autogen.sh")
             self.run("chmod +x protobuf-2.6.1/configure")
             self.run("cd protobuf-2.6.1 && ./autogen.sh")
+
+            args = []
             if self.options.static:
-                self.run("cd protobuf-2.6.1 && ./configure --disable-shared")
-            else:
-                self.run("cd protobuf-2.6.1 && ./configure")
-            self.run("cd protobuf-2.6.1 && make")
+                args += ['--disable-shared']
+
+            self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
+            self.run("cd protobuf-2.6.1 && make -j %s" % concurrency)
 
     def package(self):
         self.copy_headers("*.h", "protobuf-2.6.1/src")
 
         if self.settings.os == "Windows":
             self.copy("*.lib", "lib", "protobuf-2.6.1/cmake", keep_path=False)
-            self.copy("*/protoc.exe", "bin", "protobuf-2.6.1/cmake", keep_path=False)
+            self.copy("protoc.exe", "bin", "protobuf-2.6.1/cmake/bin", keep_path=False)
+
+            if not self.options.static:
+                self.copy("*.dll", "bin", "protobuf-2.6.1/cmake/bin", keep_path=False)
         else:
             # Copy the libs to lib
             if self.options.static:
                 self.copy("*.a", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
             else:
                 self.copy("*.so*", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
+                self.copy("*.9.dylib", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
+
             # Copy the exe to bin
-            self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
+            if self.settings.os == "Macos":
+                if self.options.static:
+                    self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
+                else:
+                    # "protoc" has libproto*.dylib dependencies with absolute file paths.
+                    # Change them to be relative.
+                    self.run("cd protobuf-2.6.1/src/.libs && bash ../../cmake/change_dylib_names.sh")
+
+                    # "src/protoc" may be a wrapper shell script which execute "src/.libs/protoc".
+                    # Copy "src/.libs/protoc" instead of "src/protoc"
+                    self.copy("protoc", "bin", "protobuf-2.6.1/src/.libs/", keep_path=False)
+                    self.copy("*.9.dylib", "bin", "protobuf-2.6.1/src/.libs", keep_path=False)
+            else:
+                self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
 
     def package_info(self):
         if self.settings.os == "Windows":
             self.cpp_info.libs = ["libprotobuf"]
+            if not self.options.static:
+                self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
+        elif self.settings.os == "Macos":
+            self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.9.dylib"]
         else:
             self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.so.9"]

@@ -52,8 +52,12 @@ set(libprotobuf_files
   #${protobuf_source_dir}/src/google/protobuf/wrappers.pb.cc
 )
 
-add_library(libprotobuf ${libprotobuf_lite_files} ${libprotobuf_files})
-target_link_libraries(libprotobuf ${CMAKE_THREAD_LIBS_INIT} ${ZLIB_LIBRARIES})
+if (BUILD_SHARED_LIBS)
+  add_library(libprotobuf SHARED ${libprotobuf_lite_files} ${libprotobuf_files})
+else (BUILD_SHARED_LIBS)
+  add_library(libprotobuf STATIC ${libprotobuf_lite_files} ${libprotobuf_files})
+endif (BUILD_SHARED_LIBS)
+target_link_libraries(libprotobuf ${CMAKE_THREAD_LIBS_INIT} ${CONAN_LIBS})
 set_target_properties(libprotobuf PROPERTIES
     COMPILE_DEFINITIONS LIBPROTOBUF_EXPORTS
     OUTPUT_NAME ${LIB_PREFIX}protobuf)
