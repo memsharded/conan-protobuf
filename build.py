@@ -9,8 +9,8 @@ if __name__ == "__main__":
             for compiler_runtime in ["MT", "MD"]:
                 for build_type in ["Release", "Debug"]:
                     for arch in ["x86", "x86_64"]:
-                        for static in ["True", "False"]:
-                            if build_type == "Debug" and compiler_runtime == "MT" and static == "False":
+                        for shared in ["True", "False"]:
+                            if build_type == "Debug" and compiler_runtime == "MT" and shared == "True":
                                 # NB: "Debug Assertion Failed!" in protoc.exe, at C++ Runtime "debug_heap.cpp" or "dbgheap.cpp"
                                 # "arch": ["x86", "x86_64"]
                                 # "compiler.version": ["11", 12", "14"]
@@ -24,17 +24,17 @@ if __name__ == "__main__":
                             settings["arch"] = arch
 
                             options = {}
-                            options["Protobuf:static"] = static
+                            options["Protobuf:shared"] = shared
 
                             builder.add(settings, options)
     else:
         for build_type in ["Release", "Debug"]:
-            for static in ["True", "False"]:
+            for shared in ["True", "False"]:
                 settings = {}
                 settings["build_type"] = build_type
 
                 options = {}
-                options["Protobuf:static"] = static
+                options["Protobuf:shared"] = shared
 
                 builder.add(settings, options)
 

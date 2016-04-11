@@ -4,21 +4,19 @@ import shutil
 
 
 class ProtobufConan(ConanFile):
-    """ ONGOING WORK, tested just in Win VS 12
-    """
     name = "Protobuf"
     version = "2.6.1"
     url = "https://github.com/memsharded/conan-protobuf.git"
-    settings = "os", "compiler", "build_type", "arch"
-    exports = "CMakeLists.txt", "*.cmake", "extract_includes.bat.in", "change_dylib_names.sh"
-    options = {"static": [True, False]}
-    default_options = "static=False"
-    requires = "zlib/1.2.8@lasote/stable"
-    generators = "cmake"
     license = "https://github.com/google/protobuf/blob/v2.6.1/LICENSE"
+    requires = "zlib/1.2.8@lasote/stable"
+    settings = "os", "compiler", "build_type", "arch"
+    exports = "CMakeLists.txt", "lib*.cmake", "extract_includes.bat.in", "protoc.cmake", "tests.cmake", "change_dylib_names.sh"
+    options = {"shared": [True, False]}
+    default_options = "shared=True"
+    generators = "cmake"
 
     def config(self):
-        self.options["zlib"].shared = not self.options.static
+        self.options["zlib"].shared = self.options.shared
 
     def source(self):
         tools.download("https://github.com/google/protobuf/"
@@ -39,8 +37,7 @@ class ProtobufConan(ConanFile):
     def build(self):
         if self.settings.os == "Windows":
             args = ['-DBUILD_TESTING=OFF']
-            args += ['-DBUILD_SHARED_LIBS=%s' % ('OFF' if self.options.static else 'ON')]
-
+            args += ['-DBUILD_SHARED_LIBS=%s' % ('ON' if self.options.shared else 'OFF')]
             cmake = CMake(self.settings)
             self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
@@ -59,7 +56,7 @@ class ProtobufConan(ConanFile):
             self.run("cd protobuf-2.6.1 && ./autogen.sh")
 
             args = []
-            if self.options.static:
+            if not self.options.shared:
                 args += ['--disable-shared']
 
             self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
@@ -72,11 +69,11 @@ class ProtobufConan(ConanFile):
             self.copy("*.lib", "lib", "protobuf-2.6.1/cmake", keep_path=False)
             self.copy("protoc.exe", "bin", "protobuf-2.6.1/cmake/bin", keep_path=False)
 
-            if not self.options.static:
+            if self.options.shared:
                 self.copy("*.dll", "bin", "protobuf-2.6.1/cmake/bin", keep_path=False)
         else:
             # Copy the libs to lib
-            if self.options.static:
+            if not self.options.shared:
                 self.copy("*.a", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
             else:
                 self.copy("*.so*", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
@@ -84,7 +81,7 @@ class ProtobufConan(ConanFile):
 
             # Copy the exe to bin
             if self.settings.os == "Macos":
-                if self.options.static:
+                if not self.options.shared:
                     self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
                 else:
                     # "protoc" has libproto*.dylib dependencies with absolute file paths.
@@ -101,9 +98,9 @@ class ProtobufConan(ConanFile):
     def package_info(self):
         if self.settings.os == "Windows":
             self.cpp_info.libs = ["libprotobuf"]
-            if not self.options.static:
+            if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
         elif self.settings.os == "Macos":
-            self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.9.dylib"]
+            self.cpp_info.libs = ["libprotobuf.a"] if not self.options.shared else ["libprotobuf.9.dylib"]
         else:
-            self.cpp_info.libs = ["libprotobuf.a"] if self.options.static else ["libprotobuf.so.9"]
+            self.cpp_info.libs = ["libprotobuf.a"] if not self.options.shared else ["libprotobuf.so.9"]

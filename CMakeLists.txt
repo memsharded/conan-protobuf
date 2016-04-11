@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(protobuf C CXX)
+include(../../conanbuildinfo.cmake)
+conan_basic_setup()
 
 option(BUILD_TESTING "Build tests" ON)
 option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
