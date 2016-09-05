@@ -8,7 +8,6 @@ class ProtobufTestConan(ConanFile):
     generators = "cmake"
 
     def build(self):
-        self.run("pwd")
         self.run('%s ../../message.proto --proto_path=../.. --cpp_out="."'
                  % os.path.join('.', 'bin', 'protoc'))
         cmake = CMake(self.settings)
