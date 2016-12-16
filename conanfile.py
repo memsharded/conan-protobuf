@@ -38,7 +38,6 @@ class ProtobufConan(ConanFile):
         if self.settings.os == "Windows":
             args = ['-DBUILD_TESTING=OFF']
             args += ['-DBUILD_SHARED_LIBS=%s' % ('ON' if self.options.shared else 'OFF')]
-            args += ['-DCMAKE_POSITION_INDEPENDENT_CODE=%s' % ('ON' if self.options.fPIC else 'OFF')]
             cmake = CMake(self.settings)
             self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
@@ -59,6 +58,8 @@ class ProtobufConan(ConanFile):
             args = []
             if not self.options.shared:
                 args += ['--disable-shared']
+            
+            args += ('"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"' if self.options.shared else '')
 
             self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1 && make -j %s" % concurrency)
