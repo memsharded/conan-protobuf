@@ -11,8 +11,8 @@ class ProtobufConan(ConanFile):
     requires = "zlib/1.2.8@lasote/stable"
     settings = "os", "compiler", "build_type", "arch"
     exports = "CMakeLists.txt", "lib*.cmake", "extract_includes.bat.in", "protoc.cmake", "tests.cmake", "change_dylib_names.sh"
-    options = {"shared": [True, False]}
-    default_options = "shared=True"
+    options = {"shared": [True, False], "fPIC": [True, False]}
+    default_options = "shared=True", "fPIC=False"
     generators = "cmake"
 
     def config(self):
@@ -38,6 +38,7 @@ class ProtobufConan(ConanFile):
         if self.settings.os == "Windows":
             args = ['-DBUILD_TESTING=OFF']
             args += ['-DBUILD_SHARED_LIBS=%s' % ('ON' if self.options.shared else 'OFF')]
+            args += ['-DCMAKE_POSITION_INDEPENDENT_CODE=%s' % ('ON' if self.options.fPIC else 'OFF')]
             cmake = CMake(self.settings)
             self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
