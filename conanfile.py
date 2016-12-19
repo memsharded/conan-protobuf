@@ -59,7 +59,8 @@ class ProtobufConan(ConanFile):
             if not self.options.shared:
                 args += ['--disable-shared']
             
-            args += ('"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"' if self.options.shared else '')
+            if self.options.shared or self.options.fPIC:
+	        args += ['"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"']
 
             self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1 && make -j %s" % concurrency)
