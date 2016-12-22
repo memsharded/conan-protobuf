@@ -42,14 +42,8 @@ class ProtobufConan(ConanFile):
             self.run('cd protobuf-2.6.1/cmake && cmake . %s %s' % (cmake.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1/cmake && cmake --build . %s" % cmake.build_config)
         else:
-            env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-
-            concurrency = 1
-            try:
-                import multiprocessing
-                concurrency = multiprocessing.cpu_count()
-            except (ImportError, NotImplementedError):
-                pass
+            env = ConfigureEnvironment(self)
+            cpus = tools.cpu_count()
 
             self.run("chmod +x protobuf-2.6.1/autogen.sh")
             self.run("chmod +x protobuf-2.6.1/configure")
@@ -63,7 +57,7 @@ class ProtobufConan(ConanFile):
 	        args += ['"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"']
 
             self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
-            self.run("cd protobuf-2.6.1 && make -j %s" % concurrency)
+            self.run("cd protobuf-2.6.1 && make -j %s" % cpus)
 
     def package(self):
         self.copy_headers("*.h", "protobuf-2.6.1/src")
@@ -79,8 +73,8 @@ class ProtobufConan(ConanFile):
             if not self.options.shared:
                 self.copy("*.a", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
             else:
-                self.copy("*.so*", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
-                self.copy("*.9.dylib", "lib", "protobuf-2.6.1/src/.libs", keep_path=False)
+                self.copy("*.so*", "lib", "protobuf-2.6.1/src/.libs", keep_path=False, symlinks=True)
+                self.copy("*.9.dylib", "lib", "protobuf-2.6.1/src/.libs", keep_path=False, symlinks=True)
 
             # Copy the exe to bin
             if self.settings.os == "Macos":
@@ -94,7 +88,7 @@ class ProtobufConan(ConanFile):
                     # "src/protoc" may be a wrapper shell script which execute "src/.libs/protoc".
                     # Copy "src/.libs/protoc" instead of "src/protoc"
                     self.copy("protoc", "bin", "protobuf-2.6.1/src/.libs/", keep_path=False)
-                    self.copy("*.9.dylib", "bin", "protobuf-2.6.1/src/.libs", keep_path=False)
+                    self.copy("*.9.dylib", "bin", "protobuf-2.6.1/src/.libs", keep_path=False, symlinks=True)
             else:
                 self.copy("protoc", "bin", "protobuf-2.6.1/src/", keep_path=False)
 
@@ -106,4 +100,4 @@ class ProtobufConan(ConanFile):
         elif self.settings.os == "Macos":
             self.cpp_info.libs = ["libprotobuf.a"] if not self.options.shared else ["libprotobuf.9.dylib"]
         else:
-            self.cpp_info.libs = ["libprotobuf.a"] if not self.options.shared else ["libprotobuf.so.9"]
+            self.cpp_info.libs = ["protobuf"]
