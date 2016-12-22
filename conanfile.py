@@ -59,6 +59,7 @@ class ProtobufConan(ConanFile):
             if not self.options.shared:
                 args += ['--disable-shared']
 
+            self.run("cd protobuf-2.6.1 && make maintainer-clean")
             self.run("cd protobuf-2.6.1 && autoreconf --force --install")
             self.run("cd protobuf-2.6.1 && %s ./configure %s" % (env.command_line, ' '.join(args)))
             self.run("cd protobuf-2.6.1 && make -j %s" % concurrency)
