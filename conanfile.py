@@ -29,9 +29,9 @@ class ProtobufConan(ConanFile):
 
     def config_options(self):
         self.options["zlib"].shared = self.options.shared
-        if self.settings.compiler == 'gcc' and float(self.settings.compiler.version.value) >= 5.1:
-            if self.settings.compiler.libcxx != 'libstdc++11':
-                raise ConanException("You must use the setting compiler.libcxx=libstdc++11")
+        # if self.settings.compiler == 'gcc' and float(self.settings.compiler.version.value) >= 5.1:
+        #     if self.settings.compiler.libcxx != 'libstdc++11':
+        #         raise ConanException("You must use the setting compiler.libcxx=libstdc++11")
 
     def source(self):
         download_filename = "v%s.tar.gz" % self.version
