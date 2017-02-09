@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <stdexcept>
 #include "message.pb.h"
 
 using namespace std;
@@ -23,7 +24,14 @@ int main() {
   tutorial::AddressBook address_book2;
   address_book2.ParseFromString(output);
 
-  cout<<address_book2.DebugString();
+  string debug_output = address_book.DebugString();
+  string debug_output2 = address_book2.DebugString();
+
+  cout << address_book2.DebugString() << std::endl;
+
+  if (debug_output != debug_output2) {
+      throw std::runtime_error("address_book != address_book2");
+  }
 
   return 0;
 }
