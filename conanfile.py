@@ -61,6 +61,8 @@ class ProtobufConan(ConanFile):
 
     def package(self):
         self.copy_headers("*.h", "protobuf-2.6.1/src")
+        self.copy("descriptor.proto", "include/google/protobuf", "protobuf-2.6.1/src/google/protobuf", keep_path=False)
+        self.copy("plugin.proto", "include/google/protobuf/compiler", "protobuf-2.6.1/src/google/protobuf/compiler", keep_path=False)
 
         if self.settings.os == "Windows":
             self.copy("*.lib", "lib", "protobuf-2.6.1/cmake", keep_path=False)
