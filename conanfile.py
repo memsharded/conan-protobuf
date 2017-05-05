@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools, ConfigureEnvironment
+from conans import ConanFile, CMake, tools, AutoToolsBuildEnvironment
 from conans.tools import os_info, SystemPackageTool
 import shutil
 import os
@@ -57,19 +57,20 @@ class ProtobufConan(ConanFile):
             self.run('cmake . %s %s' % (cmake.command_line, ' '.join(args)), cwd=cmake_dir)
             self.run("cmake --build . %s" % cmake.build_config, cwd=cmake_dir)
         else:
-            env = ConfigureEnvironment(self)
-            cpus = tools.cpu_count()
+            env = AutoToolsBuildEnvironment(self)
+            with tools.environment_append(env_build.vars):
+                cpus = tools.cpu_count()
 
-            self.run("./autogen.sh", cwd=self._source_dir)
+                self.run("./autogen.sh", cwd=self._source_dir)
 
-            args = ['-Dprotobuf_BUILD_TESTS=OFF', '--disable-dependency-tracking', '--with-zlib']
-            if not self.options.shared:
-                args += ['--disable-shared']
-            if self.options.shared or self.options.fPIC:
-                args += ['"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"']
+                args = ['--disable-dependency-tracking', '--with-zlib']
+                if not self.options.shared:
+                    args += ['--disable-shared']
+                if self.options.shared or self.options.fPIC:
+                    args += ['"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"']
 
-            self.run("%s ./configure %s" % (env.command_line, ' '.join(args)), cwd=self._source_dir)
-            self.run("make -j %s" % cpus, cwd=self._source_dir)
+                self.run("%s ./configure %s" % (env.command_line, ' '.join(args)), cwd=self._source_dir)
+                self.run("make -j %s" % cpus, cwd=self._source_dir)
 
     def package(self):
         self.copy("*.h", "include", "%s/src" % self._source_dir)
