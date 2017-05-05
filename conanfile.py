@@ -1,4 +1,5 @@
 from conans import ConanFile, CMake, tools, ConfigureEnvironment
+from conans.tools import os_info, SystemPackageTool
 import shutil
 import os
 
@@ -38,6 +39,11 @@ class ProtobufConan(ConanFile):
         tools.unzip(download_filename)
         os.unlink(download_filename)
         shutil.copy("change_dylib_names.sh", "%s/cmake" % self._source_dir)
+
+    def system_requirements(self):
+        if os_info.is_linux:
+            installer = SystemPackageTool()
+            installer.install(["autoconf", "automake", "libtool", "curl", "make", "g++", "unzip"])
 
     def build(self):
         if self.settings.os == "Windows":
