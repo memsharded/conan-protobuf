@@ -58,7 +58,7 @@ class ProtobufConan(ConanFile):
             self.run("cmake --build . %s" % cmake.build_config, cwd=cmake_dir)
         else:
             env = AutoToolsBuildEnvironment(self)
-            with tools.environment_append(env_build.vars):
+            with tools.environment_append(env.vars):
                 cpus = tools.cpu_count()
 
                 self.run("./autogen.sh", cwd=self._source_dir)
@@ -69,7 +69,7 @@ class ProtobufConan(ConanFile):
                 if self.options.shared or self.options.fPIC:
                     args += ['"CFLAGS=-fPIC" "CXXFLAGS=-fPIC"']
 
-                self.run("%s ./configure %s" % (env.command_line, ' '.join(args)), cwd=self._source_dir)
+                self.run("./configure %s" % (' '.join(args)), cwd=self._source_dir)
                 self.run("make -j %s" % cpus, cwd=self._source_dir)
 
     def package(self):
