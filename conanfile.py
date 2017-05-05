@@ -13,14 +13,14 @@ class ProtobufConan(ConanFile):
     See import() in test_package/conanfile.py for an example
     """
     name = "Protobuf"
-    version = "3.0.2"
-    _sha256 = 'b700647e11556b643ccddffd1f41d8cb7704ed02090af54cc517d44d912d11c1'
+    version = "3.3.0"
+    _sha256 = '94c414775f275d876e5e0e4a276527d155ab2d0da45eed6b7734301c330be36e'
     _shared_lib_version = 10
 
     _source_dir = "protobuf-%s" % version
     url = "https://github.com/memsharded/conan-protobuf.git"
     license = "https://github.com/google/protobuf/blob/master/LICENSE"
-    requires = "zlib/1.2.8@lasote/stable"
+    requires = "zlib/1.2.11@lasote/stable"
     settings = "os", "compiler", "build_type", "arch"
     exports = "change_dylib_names.sh"
     options = {"shared": [True, False], "fPIC": [True, False]}
@@ -80,8 +80,8 @@ class ProtobufConan(ConanFile):
                     self.copy("protoc", "bin", "%s/src/" % self._source_dir, keep_path=False)
                     self.copy("*.a", "lib", "%s/src/.libs" % self._source_dir, keep_path=False)
                 else:
-                    # Change libproto*.dylib dependencies and ids to be relative to @executable_path
-                    self.run("cd %s/src/.libs && bash ../../cmake/change_dylib_names.sh" % self._source_dir)
+                    # Change *.dylib dependencies and ids to be relative to @executable_path
+                    self.run("bash ../../cmake/change_dylib_names.sh", cwd="%s/src/.libs" % self._source_dir)
                     self.copy("*.dylib", "bin", "%s/src/.libs" % self._source_dir,
                               keep_path=False, symlinks=True)
                     self.copy("*.dylib", "lib", "%s/src/.libs" % self._source_dir,

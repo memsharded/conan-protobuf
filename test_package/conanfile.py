@@ -4,7 +4,7 @@ import os
 
 class ProtobufTestConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = "Protobuf/3.0.2@sourcedelica/testing"   # FIXME
+    requires = "Protobuf/3.3.0@sourcedelica/testing"   # FIXME
     generators = "cmake"
 
     def build(self):
@@ -13,11 +13,11 @@ class ProtobufTestConan(ConanFile):
         self.run("cmake --build . %s" % cmake.build_config)
 
     def imports(self):
-        self.copy("protoc.exe", "bin", "bin")         # Windows
-        self.copy("protoc", "bin", "bin")             # Linux / Macos
+        self.copy("protoc.exe",        "bin", "bin")  # Windows
+        self.copy("protoc",            "bin", "bin")  # Linux / Macos
         self.copy("libproto*.*.dylib", "bin", "bin")  # Macos (when Protobuf:shared=True)
-        self.copy("libproto*.dll", "bin", "bin")      # Windows (when Protobuf:shared=True)
-        self.copy("zlib*.dll", "bin", "bin")          # Windows (when zlib:shared=True)
+        self.copy("libproto*.dll",     "bin", "bin")  # Windows (when Protobuf:shared=True)
+        self.copy("zlib*.dll",         "bin", "bin")  # Windows (when zlib:shared=True)
 
     def test(self):
         self.run(os.path.join(".", "bin", "client"))

@@ -6,8 +6,9 @@ set(PROTOS message.proto)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-set(Protobuf_LIBRARY ${CONAN_PROTOBUF_ROOT} CACHE PATH "Protobuf library dir")
+set(Protobuf_LIBRARY ${CONAN_PROTOBUF_ROOT})
 find_package(Protobuf)
+message(${PROTOBUF_PROTOC_EXECUTABLE})
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
