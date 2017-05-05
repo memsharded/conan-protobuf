@@ -56,7 +56,7 @@ class ProtobufConan(ConanFile):
 
             self.run("./autogen.sh", cwd=self._source_dir)
 
-            args = ['--disable-dependency-tracking', '--with-zlib']
+            args = ['-Dprotobuf_BUILD_TESTS=OFF', '--disable-dependency-tracking', '--with-zlib']
             if not self.options.shared:
                 args += ['--disable-shared']
             if self.options.shared or self.options.fPIC:
@@ -101,7 +101,10 @@ class ProtobufConan(ConanFile):
 
     def package_info(self):
         if self.settings.os == "Windows":
-            self.cpp_info.libs = ["libprotobuf"]
+            if self.settings.build_type == "Debug":
+                self.cpp_info.libs = ["libprotobufd"]
+            else:
+                self.cpp_info.libs = ["libprotobuf"]
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
         elif self.settings.os == "Macos":
