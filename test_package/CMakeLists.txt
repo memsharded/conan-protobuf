@@ -8,6 +8,8 @@ conan_basic_setup()
 
 set(Protobuf_LIBRARY ${CONAN_PROTOBUF_ROOT})
 find_package(Protobuf)
+
+set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_BINARY_DIR}/bin/protoc)
 message(${PROTOBUF_PROTOC_EXECUTABLE})
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
