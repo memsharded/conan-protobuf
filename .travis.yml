@@ -5,7 +5,7 @@ services:
   - docker
 env:
   global:
-    - CONAN_UPLOAD: https://api.bintray.com/conan/drodri/myrepo
+    - CONAN_UPLOAD: https://api.bintray.com/conan/memsharded/myrepo
     - CONAN_REFERENCE: "Protobuf/3.3.0"
     - CONAN_USERNAME: "memsharded"
     - CONAN_CHANNEL: "testing"

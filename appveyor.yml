@@ -4,7 +4,7 @@ environment:
     PYTHON_VERSION: "2.7.8"
     PYTHON_ARCH: "32"
 
-    CONAN_UPLOAD: https://api.bintray.com/conan/drodri/myrepo
+    CONAN_UPLOAD: https://api.bintray.com/conan/memsharded/myrepo
     CONAN_REFERENCE: "Protobuf/3.3.0"
     CONAN_USERNAME: "memsharded"
     CONAN_CHANNEL: "testing"
