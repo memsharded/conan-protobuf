@@ -79,7 +79,10 @@ class ProtobufConan(ConanFile):
         self.copy("plugin.proto", "include/google/protobuf/compiler", "protobuf-%s/src/google/protobuf/compiler" % self.version, keep_path=False)
 
         if self.settings.os == "Windows":
-            self.copy("*.lib", "lib", "%s/cmake" % self._source_dir, keep_path=False)
+            if self.settings.compiler == "Visual Studio":
+                self.copy("*.lib", "lib", "%s/cmake" % self._source_dir, keep_path=False)
+            elif self.settings.compiler == "gcc":
+                self.copy("*.a", "lib", "%s/cmake" % self._source_dir, keep_path=False)
             self.copy("*.exe", "bin", "%s/cmake" % self._source_dir, keep_path=False)
 
             if self.options.shared:
@@ -110,9 +113,9 @@ class ProtobufConan(ConanFile):
     def package_info(self):
         if self.settings.os == "Windows":
             if self.settings.build_type == "Debug":
-                self.cpp_info.libs = ["libprotobufd"]
+                self.cpp_info.libs = ["lib" if self.settings.compiler == "Visual Studio" else "" + "protobufd"]
             else:
-                self.cpp_info.libs = ["libprotobuf"]
+                self.cpp_info.libs = ["lib" if self.settings.compiler == "Visual Studio" else "" + "protobuf"]
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
         elif self.settings.os == "Macos":
