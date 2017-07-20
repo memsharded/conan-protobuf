@@ -112,10 +112,9 @@ class ProtobufConan(ConanFile):
 
     def package_info(self):
         if self.settings.os == "Windows":
-            if self.settings.build_type == "Debug":
-                self.cpp_info.libs = ["lib" if self.settings.compiler == "Visual Studio" else "" + "protobufd"]
-            else:
-                self.cpp_info.libs = ["lib" if self.settings.compiler == "Visual Studio" else "" + "protobuf"]
+            lib_prefix = "lib" if self.settings.compiler == "Visual Studio" else ""
+            lib_suffix = "d" if self.settings.build_type == "Debug" else ""
+            self.cpp_info.libs = ["%sprotobuf%s" % (lib_prefix, lib_suffix)]
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
         elif self.settings.os == "Macos":
