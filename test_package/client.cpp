@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+
+#include <google/protobuf/compiler/code_generator.h>  // for ParseGeneratorParameter
+
 #include "message.pb.h"
 
 using namespace std;
@@ -33,5 +36,6 @@ int main() {
       throw std::runtime_error("address_book != address_book2");
   }
 
+  google::protobuf::compiler::ParseGeneratorParameter("", nullptr);
   return 0;
 }
