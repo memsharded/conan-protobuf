@@ -64,7 +64,7 @@ class ProtobufConan(ConanFile):
 
                 self.run("./autogen.sh", cwd=self._source_dir)
 
-                args = ['--disable-dependency-tracking', '--with-zlib']
+                args = ['--disable-dependency-tracking', '--with-zlib', '--prefix=%s/install-dir' % os.path.abspath(self._source_dir)]
                 if not self.options.shared:
                     args += ['--disable-shared']
                 if self.options.shared or self.options.fPIC:
@@ -72,13 +72,14 @@ class ProtobufConan(ConanFile):
 
                 self.run("./configure %s" % (' '.join(args)), cwd=self._source_dir)
                 self.run("make -j %s" % cpus, cwd=self._source_dir)
+                self.run("make install", cwd=self._source_dir)
 
     def package(self):
-        self.copy("*.h", "include", "%s/src" % self._source_dir)
-        self.copy("descriptor.proto", "include/google/protobuf", "protobuf-%s/src/google/protobuf" % self.version, keep_path=False)
-        self.copy("plugin.proto", "include/google/protobuf/compiler", "protobuf-%s/src/google/protobuf/compiler" % self.version, keep_path=False)
-
         if self.settings.os == "Windows":
+            self.copy("*.h", "include", "%s/src" % self._source_dir)
+            self.copy("descriptor.proto", "include/google/protobuf", "protobuf-%s/src/google/protobuf" % self.version, keep_path=False)
+            self.copy("plugin.proto", "include/google/protobuf/compiler", "protobuf-%s/src/google/protobuf/compiler" % self.version, keep_path=False)
+
             if self.settings.compiler == "Visual Studio":
                 self.copy("*.lib", "lib", "%s/cmake" % self._source_dir, keep_path=False)
             elif self.settings.compiler == "gcc":
@@ -88,27 +89,7 @@ class ProtobufConan(ConanFile):
             if self.options.shared:
                 self.copy("*.dll", "bin", "%s/cmake" % self._source_dir, keep_path=False)
         else:
-            if self.settings.os == "Macos":
-                if not self.options.shared:
-                    self.copy("protoc", "bin", "%s/src/" % self._source_dir, keep_path=False)
-                    self.copy("*.a", "lib", "%s/src/.libs" % self._source_dir, keep_path=False)
-                else:
-                    # Change *.dylib dependencies and ids to be relative to @executable_path
-                    self.run("bash ../../cmake/change_dylib_names.sh", cwd="%s/src/.libs" % self._source_dir)
-                    self.copy("*.dylib", "bin", "%s/src/.libs" % self._source_dir,
-                              keep_path=False, symlinks=True)
-                    self.copy("*.dylib", "lib", "%s/src/.libs" % self._source_dir,
-                              keep_path=False, symlinks=True)
-
-                    # "src/protoc" may be a wrapper shell script which execute "src/.libs/protoc".
-                    # Copy "src/.libs/protoc" instead of "src/protoc"
-                    self.copy("protoc", "bin", "%s/src/.libs/" % self._source_dir, keep_path=False)
-            else:
-                self.copy("protoc", "bin", "%s/src/" % self._source_dir, keep_path=False)
-                if not self.options.shared:
-                    self.copy("*.a", "lib", "%s/src/.libs" % self._source_dir, keep_path=False)
-                else:
-                    self.copy("*.so*", "lib", "%s/src/.libs" % self._source_dir, keep_path=False, symlinks=True)
+            self.copy("*", ".", "%s/install-dir" % self._source_dir)
 
     def package_info(self):
         if self.settings.os == "Windows":
