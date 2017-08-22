@@ -4,7 +4,6 @@ import os
 
 class ProtobufTestConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = "Protobuf/3.3.0@memsharded/testing"   # FIXME
     generators = "cmake"
 
     def build(self):

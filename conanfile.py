@@ -19,18 +19,16 @@ class ProtobufConan(ConanFile):
     _source_dir = "protobuf-%s" % version
     url = "https://github.com/memsharded/conan-protobuf.git"
     license = "https://github.com/google/protobuf/blob/master/LICENSE"
-    requires = "zlib/1.2.11@lasote/stable"
     settings = "os", "compiler", "build_type", "arch"
     exports = "change_dylib_names.sh"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = "shared=False", "fPIC=False"
+    options = {"shared": [True, False], "fPIC": [True, False], "zlib": [True, False]}
+    default_options = "shared=False", "fPIC=False", "zlib=True"
     generators = "cmake"
 
-    def config_options(self):
-        self.options["zlib"].shared = self.options.shared
-        # if self.settings.compiler == 'gcc' and float(self.settings.compiler.version.value) >= 5.1:
-        #     if self.settings.compiler.libcxx != 'libstdc++11':
-        #         raise ConanException("You must use the setting compiler.libcxx=libstdc++11")
+    def requirements(self):
+        if self.options.zlib:
+            self.requires("zlib/1.2.11@lasote/stable")
+            self.options["zlib"].shared = self.options.shared
 
     def source(self):
         download_filename = "v%s.tar.gz" % self.version
@@ -49,11 +47,13 @@ class ProtobufConan(ConanFile):
     def build(self):
         if self.settings.os == "Windows":
             args = ['-Dprotobuf_BUILD_TESTS=OFF']
-            args += ['-DZLIB_ROOT=%s' % dict(self.deps_cpp_info.dependencies)["zlib"].rootpath]
+            args += ['-Dprotobuf_WITH_ZLIB=%s' % ('ON' if self.options.zlib else 'OFF')]
+            if self.options.zlib:
+                args += ['-DZLIB_ROOT=%s' % dict(self.deps_cpp_info.dependencies)["zlib"].rootpath]
             args += ['-DBUILD_SHARED_LIBS=%s' % ('ON' if self.options.shared else 'OFF')]
             if self.settings.compiler == "Visual Studio":
                 args += ['-Dprotobuf_MSVC_STATIC_RUNTIME=%s' % ('ON' if "MT" in str(self.settings.compiler.runtime) else 'OFF')]
-            cmake = CMake(self.settings)
+            cmake = CMake(self)
             cmake_dir = os.path.sep.join([self._source_dir, "cmake"])
             self.run('cmake . %s %s' % (cmake.command_line, ' '.join(args)), cwd=cmake_dir)
             self.run("cmake --build . %s" % cmake.build_config, cwd=cmake_dir)
@@ -64,7 +64,9 @@ class ProtobufConan(ConanFile):
 
                 self.run("./autogen.sh", cwd=self._source_dir)
 
-                args = ['--disable-dependency-tracking', '--with-zlib']
+                args = ['--disable-dependency-tracking']
+                if self.options.zlib:
+                    args += ['--with-zlib']
                 if not self.options.shared:
                     args += ['--disable-shared']
                 if self.options.shared or self.options.fPIC:
