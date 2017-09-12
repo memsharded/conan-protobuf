@@ -13,7 +13,7 @@ class ProtobufConan(ConanFile):
     """
     name = "Protobuf"
     version = "3.3.0"
-    _sha256 = '94c414775f275d876e5e0e4a276527d155ab2d0da45eed6b7734301c330be36e'
+    _sha256 = '9a36bc1265fa83b8e818714c0d4f08b8cec97a1910de0754a321b11e66eb76de'
     _shared_lib_version = 10
 
     _source_dir = "protobuf-%s" % version
