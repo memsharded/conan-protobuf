@@ -48,15 +48,18 @@ class ProtobufConan(ConanFile):
 
     def build(self):
         if self.settings.os == "Windows":
-            args = ['-Dprotobuf_BUILD_TESTS=OFF']
-            args += ['-DZLIB_ROOT=%s' % dict(self.deps_cpp_info.dependencies)["zlib"].rootpath]
-            args += ['-DBUILD_SHARED_LIBS=%s' % ('ON' if self.options.shared else 'OFF')]
+            defs = dict()
+            defs['protobuf_BUILD_TESTS'] = 'OFF'
+            defs['ZLIB_ROOT']=self.deps_cpp_info['zlib'].rootpath
+            defs['BUILD_SHARED_LIBS'] = 'ON' if self.options.shared else 'OFF'
             if self.settings.compiler == "Visual Studio":
-                args += ['-Dprotobuf_MSVC_STATIC_RUNTIME=%s' % ('ON' if "MT" in str(self.settings.compiler.runtime) else 'OFF')]
-            cmake = CMake(self.settings)
+                defs['protobuf_MSVC_STATIC_RUNTIME'] = 'ON' if "MT" in str(self.settings.compiler.runtime) else 'OFF'
+            defs['CMAKE_INSTALL_PATH'] = self.package_folder
+            cmake = CMake(self)
             cmake_dir = os.path.sep.join([self._source_dir, "cmake"])
-            self.run('cmake . %s %s' % (cmake.command_line, ' '.join(args)), cwd=cmake_dir)
-            self.run("cmake --build . %s" % cmake.build_config, cwd=cmake_dir)
+            cmake.configure(source_dir='.', build_dir=cmake_dir, defs=defs)
+            cmake.build()
+            cmake.install()            
         else:
             env = AutoToolsBuildEnvironment(self)
             with tools.environment_append(env.vars):
@@ -80,7 +83,7 @@ class ProtobufConan(ConanFile):
 
         if self.settings.os == "Windows":
             if self.settings.compiler == "Visual Studio":
-                self.copy("*.lib", "lib", "%s/cmake" % self._source_dir, keep_path=False)
+                pass
             elif self.settings.compiler == "gcc":
                 self.copy("*.a", "lib", "%s/cmake" % self._source_dir, keep_path=False)
             self.copy("*.exe", "bin", "%s/cmake" % self._source_dir, keep_path=False)
