@@ -19,7 +19,7 @@ class ProtobufConan(ConanFile):
     _source_dir = "protobuf-%s" % version
     url = "https://github.com/memsharded/conan-protobuf.git"
     license = "https://github.com/google/protobuf/blob/master/LICENSE"
-    requires = "zlib/1.2.11@lasote/stable"
+    requires = "zlib/1.2.11@conan/stable"
     settings = "os", "compiler", "build_type", "arch"
     exports = "change_dylib_names.sh"
     options = {"shared": [True, False], "fPIC": [True, False]}
@@ -53,7 +53,7 @@ class ProtobufConan(ConanFile):
             args += ['-DBUILD_SHARED_LIBS=%s' % ('ON' if self.options.shared else 'OFF')]
             if self.settings.compiler == "Visual Studio":
                 args += ['-Dprotobuf_MSVC_STATIC_RUNTIME=%s' % ('ON' if "MT" in str(self.settings.compiler.runtime) else 'OFF')]
-            cmake = CMake(self.settings)
+            cmake = CMake(self)
             cmake_dir = os.path.sep.join([self._source_dir, "cmake"])
             self.run('cmake . %s %s' % (cmake.command_line, ' '.join(args)), cwd=cmake_dir)
             self.run("cmake --build . %s" % cmake.build_config, cwd=cmake_dir)
