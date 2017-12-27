@@ -43,7 +43,7 @@ class ProtobufConan(ConanFile):
     def system_requirements(self):
         if os_info.is_linux:
             installer = SystemPackageTool()
-            for pkg in ["autoconf", "automake", "libtool", "curl", "make", "g++", "unzip"]:
+            for pkg in ["autoconf", "automake", "libtool", "curl", "make", "unzip"]:
                 installer.install(pkg)
 
     def build(self):
