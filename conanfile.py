@@ -114,11 +114,16 @@ class ProtobufConan(ConanFile):
         if self.settings.os == "Windows":
             lib_prefix = "lib" if self.settings.compiler == "Visual Studio" else ""
             lib_suffix = "d" if self.settings.build_type == "Debug" else ""
-            self.cpp_info.libs = ["%sprotobuf%s" % (lib_prefix, lib_suffix)]
+            self.cpp_info.libs = [
+                "%sprotobuf-lite%s" % (lib_prefix, lib_suffix),
+                "%sprotoc%s" % (lib_prefix, lib_suffix),
+                "%sprotobuf%s" % (lib_prefix, lib_suffix)]
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
         elif self.settings.os == "Macos":
-            self.cpp_info.libs = ["libprotobuf.a"] if not self.options.shared \
-                else ["libprotobuf.%d.dylib" % self._shared_lib_version]
+            self.cpp_info.libs = ["libprotobuf-lite.a", "libprotoc.a", "libprotobuf.a"] if not self.options.shared \
+                else ["libprotobuf-lite.%d.dylib" % self._shared_lib_version,
+                      "libprotoc.%d.dylib" % self._shared_lib_version,
+                      "libprotobuf.%d.dylib" % self._shared_lib_version]
         else:
-            self.cpp_info.libs = ["protobuf"]
+            self.cpp_info.libs = ["protobuf-lite", "protoc", "protobuf"]
